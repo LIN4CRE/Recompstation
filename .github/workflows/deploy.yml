@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages & Package Windows Distribution
 
 on:
   push:
@@ -6,25 +6,25 @@ on:
       - main
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 concurrency:
   group: 'pages'
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  build-package-deploy:
+    name: Build Vite, Package Windows Zip & Deploy Pages
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout Source Code
         uses: actions/checkout@v4
 
       - name: Setup Node.js 20
@@ -36,15 +36,27 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build Web Application
+      - name: Build Vite Production Web App
         run: npm run build
         env:
           NODE_ENV: production
 
-      - name: Setup Pages
+      - name: Package Windows Zip-Ready Executable Distribution
+        run: node scripts/package-win-dist.js
+
+      - name: Upload Windows Distribution Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RecompStation-Windows-x64-Zip
+          path: |
+            release/RecompStation-Windows-x64.zip
+            release/SHA256SUMS.txt
+          retention-days: 30
+
+      - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload Pages Artifact
+      - name: Upload GitHub Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './dist'

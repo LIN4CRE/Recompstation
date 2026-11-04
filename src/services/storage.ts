@@ -123,3 +123,15 @@ export async function getGameSaveStates(gameId: string): Promise<SaveState[]> {
     req.onerror = () => reject(req.error);
   });
 }
+
+export async function deleteGameState(id: string): Promise<void> {
+  const db = await getDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('saves', 'readwrite');
+    const store = tx.objectStore('saves');
+    const req = store.delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+

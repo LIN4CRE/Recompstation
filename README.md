@@ -1,17 +1,18 @@
 <p align="center">
-  <img src="./public/github-banner.jpg" alt="RecompStation Banner" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
+  <img src="./public/recompstation-banner.jpg" alt="RecompStation - Game Preservation Engineering" width="100%" style="border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.6);" />
 </p>
 
 <h1 align="center">RecompStation</h1>
 
 <p align="center">
-  <strong>Next-Generation Static ROM Recompilation, Binary Analysis & Instant WebAssembly Gaming Platform</strong>
+  <strong>Next-Generation Static ROM Recompilation, Binary Reverse Engineering & Instant Browser Gaming Platform</strong>
 </p>
 
 <p align="center">
   <a href="https://github.com"><img src="https://img.shields.io/badge/GitHub%20Pages-Automated%20Deploy-brightgreen?style=for-the-badge&logo=github-pages" alt="Pages Deploy" /></a>
-  <a href="https://github.com"><img src="https://img.shields.io/badge/Windows%20.exe-Automated%20Build-blue?style=for-the-badge&logo=windows" alt="Windows Build" /></a>
+  <a href="https://github.com"><img src="https://img.shields.io/badge/Windows%20Zip%20Package-Ready-blue?style=for-the-badge&logo=windows" alt="Windows Package" /></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/WebAssembly-SIMD%20Accelerated-orange?style=for-the-badge&logo=webassembly" alt="Wasm" /></a>
+  <a href="https://github.com"><img src="https://img.shields.io/badge/IndexedDB-Local--First%20Storage-yellow?style=for-the-badge&logo=databricks" alt="IndexedDB" /></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/TypeScript-Strict%20Mode-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript" /></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/React%2019-Vite%208-61DAFB?style=for-the-badge&logo=react" alt="React 19" /></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/Privacy-100%25%20Local--First-8B5CF6?style=for-the-badge&logo=shield" alt="Local-First" /></a>
@@ -19,166 +20,183 @@
 
 ---
 
-## 🌟 Executive Overview
+## 🧭 Project Philosophy
 
-**RecompStation** transforms how classic and retro games are analyzed, recompiled, and played. Rather than treating ROMs as opaque blobs for generic emulation, RecompStation acts as an intelligent game-engineering workbench:
+Traditional emulation treats classic game ROMs as opaque binary blobs, re-interpreting machine instructions on top of virtualized hardware cycles. While versatile, this often introduces execution latency, input lag, micro-stutter, and platform lock-in.
 
-1. **Upload Game ROMs**: Drag and drop `.nes`, `.gb`, `.gbc`, `.ch8`, `.z64`, `.n64`, `.sfc`, `.smc`, `.bin` or `.zip` archives.
-2. **Deep Binary & Entropy Analysis**: Automatically extracts header metadata, calculates cryptographic checksums (CRC32, MD5, SHA-1), profiles Shannon entropy, and disassembles instructions across multiple architectures (MOS 6502, Sharp SM83, CHIP-8, MIPS R4300i).
-3. **Intelligent Recompilation Matrix**: Investigates static recompilers (e.g., N64Recomp, Zelda64Recomp, native C source ports) versus high-performance WebAssembly emulation cores.
-4. **Instant In-Browser Gaming**: Play games instantly with zero installation, full gamepad support, audio synthesis, and real-time hardware telemetry.
-5. **REA (Reverse Engineer Anything) AI Assistant**: Integrated Gemini-powered reverse engineering agent providing architectural breakdowns, function decompilation analysis, and code reconstruction.
-6. **AI Box Art Studio**: Restores vintage box art or generates period-accurate 3D retro box renders from ROM metadata.
+**RecompStation** pioneers a **game preservation engineering philosophy**:
 
----
-
-## 📥 Download Windows Executable (`.exe`)
-
-RecompStation is available both as a web application and as a standalone native Windows desktop application with full hardware acceleration, low-latency audio, and zero-configuration gamepad support.
-
-### Option 1: Direct Download from GitHub Releases (Recommended)
-1. Navigate to the **[Releases](../../releases)** page in this GitHub repository.
-2. Under the latest release, download your preferred binary:
-   - **`RecompStation Setup *.exe`**: Standard Windows installer (NSIS) with Start Menu and Desktop shortcuts.
-   - **`RecompStation *.exe`**: Standalone portable edition. No installation required—run directly from anywhere or a USB drive.
-3. Verify file integrity using the provided `SHA256SUMS.txt`.
-
-### Option 2: Download Artifact from Any GitHub Actions Run
-Every commit to the repository triggers the CI/CD pipeline which automatically produces fresh `.exe` binaries:
-1. Click the **Actions** tab at the top of the GitHub repository.
-2. Select the latest **"Build Windows Executable (.exe)"** workflow run.
-3. Scroll down to the **Artifacts** section at the bottom.
-4. Download **`RecompStation-Windows-Binaries`** (ZIP archive containing the installer, portable `.exe`, and checksums).
-
-### Option 3: Trigger a Custom Build via GitHub Actions
-You can generate a fresh `.exe` build on demand without touching code:
-1. Go to **Actions** → **"Build Windows Executable (.exe)"**.
-2. Click **Run workflow** dropdown on the right.
-3. Enter your desired version tag (e.g., `v1.0.0`) and leave `create_release: true`.
-4. Click **Run workflow**. Within ~3–4 minutes, your Windows `.exe` installer and portable binary will be compiled and published under GitHub Releases.
+1. **Static Recompilation Over Brute-Force Emulation**: Whenever viable, binary machine code should be analyzed, re-targeted, and statically transformed into native code or modern WebAssembly binaries. This unlocks ultra-high frame rates, true widescreen aspect ratios, frame interpolation, native rendering backends, and deterministic execution.
+2. **100% Local-First Sovereignty & Privacy**: Your personal game dumps, ROM backups, and save states belong solely to you. All binary parsing, hashing, entropy analysis, and execution run strictly client-side inside your browser or native desktop sandbox. No ROM binaries are ever uploaded to remote servers.
+3. **Reproducible Binary Intelligence**: Every file is systematically cataloged with multi-algorithm cryptographic verification (CRC32, MD5, SHA-1), Shannon information entropy mapping, and multi-architecture instruction disassembly (MOS 6502, Sharp SM83, CHIP-8, MIPS R4300i).
+4. **Zero Dark Patterns & Zero Bloat**: No analytics trackers, no telemetry, no subscription paywalls, and no adware. Just pure computing performance and digital preservation.
 
 ---
 
-## 🚀 Automated GitHub Deployment (GitHub Pages)
+## 🏗️ Project Architecture
 
-The repository includes a ready-to-run GitHub Actions deployment workflow (`.github/workflows/deploy.yml`).
+RecompStation is architected as an ultra-responsive, reactive single-page application and desktop runtime leveraging modern web primitives:
 
-### Setup in 3 Simple Steps:
-1. Push your repository to GitHub.
-2. In your GitHub repository, navigate to **Settings** → **Pages**.
-3. Under **Build and deployment** → **Source**, select **GitHub Actions**.
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                        RecompStation Architecture                       │
+└────────────────────────────────────────────────────────────────────────┘
+                                    │
+    ┌───────────────────────────────┴───────────────────────────────┐
+    ▼                                                               ▼
+┌───────────────────────────────┐               ┌───────────────────────────────┐
+│       UI & Presentation       │               │     Binary Ingestion Engine   │
+├───────────────────────────────┤               ├───────────────────────────────┤
+│ • React 19 Functional Tree    │               │ • Drag-and-drop & ZIP reader  │
+│ • Tailwind CSS v4 Cyber-Deck  │◄──────────────┤ • Magic Byte Sniffing         │
+│ • Lucide Icons & Canvas HUD   │               │ • CRC32 / MD5 / SHA-1 Hashing │
+│ • Real-Time Telemetry Overlay │               │ • Shannon Entropy Profiler    │
+└───────────────────────────────┘               └───────────────┬───────────────┘
+                │                                               │
+                ▼                                               ▼
+┌───────────────────────────────┐               ┌───────────────────────────────┐
+│     Client Persistence        │               │   Multi-Architecture Core     │
+├───────────────────────────────┤               ├───────────────────────────────┤
+│ • IndexedDB ROM Binary Vault  │               │ • MOS 6502 (NES) Engine       │
+│ • LocalStorage Save States    │◄──────────────┤ • Sharp SM83 (Game Boy/GBC)   │
+│ • Battery SRAM Mirrors        │               │ • CHIP-8 / S-CHIP Interpreter │
+│ • AI Box Art Blob Cache       │               │ • MIPS R4300i (N64) Scanner   │
+└───────────────────────────────┘               └───────────────┬───────────────┘
+                                                                │
+                                                                ▼
+                                                ┌───────────────────────────────┐
+                                                │ Execution & Recompilation     │
+                                                ├───────────────────────────────┤
+                                                │ • WebAssembly SIMD Interpreters│
+                                                │ • Static Recompilation Matrix │
+                                                │ • Low-Latency Audio Synthesizer│
+                                                │ • Gamepad API Controller Link │
+                                                └───────────────────────────────┘
+```
 
-Whenever you push to the `main` branch, GitHub Actions automatically:
-- Checks out the codebase on an Ubuntu runner.
-- Installs dependencies using clean `npm ci`.
-- Compiles the production build with Vite (`npm run build`).
-- Deploys the static client to GitHub Pages with instant HTTPS and global CDN delivery.
+### 1. React 19 Frontend
+- High-frequency virtualized rendering pipeline for snappy UI updates during heavy binary processing.
+- Reactive modal overlay architecture managing real-time emulation canvases and the `PerformanceMonitor` telemetry HUD.
+
+### 2. TypeScript (Strict Mode)
+- End-to-end type safety covering binary buffers, ROM cartridge headers, CPU register states, disassembler instruction sets, and execution flags.
+- Prevents memory leaks and invalid pointer offsets during client-side array buffer manipulation.
+
+### 3. WebAssembly (Wasm) & SIMD
+- High-throughput execution modules compiled with 128-bit SIMD vectorization.
+- Delivers locked 60 FPS emulation and microsecond frame pacing across low-end mobile devices and high-end desktop workstations.
+
+### 4. IndexedDB Local Storage
+- Browser-native structured database (`idb` storage layer) storing game ROMs, extracted metadata, custom box art, and save states locally.
+- Eliminates the need to re-upload or re-parse ROMs upon refreshing or reopening the application.
 
 ---
 
-## 🕹️ Supported Platforms & Recompilation Engine Matrix
+## 💻 Technical Stack Overview
 
-| Platform | Format Extensions | Execution Engine | Static Recompilation Support |
-| :--- | :--- | :--- | :--- |
-| **Nintendo Entertainment System (NES)** | `.nes`, `.nes.zip` | Custom WebAssembly Cycle-Accurate Core | Direct 6502 Decompilation / Native C Recomp |
-| **Game Boy / Game Boy Color** | `.gb`, `.gbc`, `.zip` | Custom Pure JS / Wasm SM83 Core | Static Disassembly & Source Port Rebuilding |
-| **Nintendo 64** | `.z64`, `.n64`, `.v64` | Wasm Core / Static Recomp Pipeline | **N64Recomp**, Zelda64Recomp, Ship of Harkinian, SM64 Port |
-| **CHIP-8 / Super-CHIP** | `.ch8`, `.ch8.zip` | High-Speed Micro-Interpreter | Native C / Wasm JIT Translation |
-| **Super Nintendo (SNES)** | `.sfc`, `.smc` | Multi-Core Wasm Pipeline | Snes9x Wasm / SMW Decompilation |
-| **Sony PlayStation (PS1)** | `.bin`, `.cue`, `.iso` | Hardware Accelerated WebGL/Wasm | DuckStation Wasm / Psy-Q Static Recomp |
-
----
-
-## 📊 Real-Time Hardware Performance Telemetry HUD
-
-RecompStation features a built-in `PerformanceMonitor` telemetry HUD overlay inside the gaming view:
-
-- **High-Frequency FPS & Frame Time**: Driven by `requestAnimationFrame` measuring exact millisecond frame deltas.
-- **Microsecond Frame Pacing Sparkline**: Real-time 24-sample histogram visualizes stutter, frame drops, and VSync pacing.
-- **Browser Memory Heap Monitor**: Real-time heap consumption tracking via `performance.memory` with graceful fallbacks.
-- **Corner Cycling & Visibility Toggle**: Switch between HUD overlay positions or press `F3` (or click `HUD ON/OFF`) to toggle visibility.
+| Category | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Framework** | React 19 | UI component architecture and state management |
+| **Language** | TypeScript 5.8+ | Strict type safety, memory structures, and binary interfaces |
+| **Styling** | Tailwind CSS v4 | High-contrast retro cyber-deck UI, animations, responsive design |
+| **Build Tool** | Vite 8 | Instant hot module replacement, optimized ES modules & bundling |
+| **Execution** | WebAssembly + Canvas 2D / WebGL | Hardware-accelerated pixel buffers and SIMD instruction execution |
+| **Local Storage** | IndexedDB & LocalStorage | Offline persistence of ROM library, battery SRAM, and save states |
+| **Desktop Runtime**| Electron & electron-builder | Native Windows desktop packaging (`.exe` installer & portable) |
+| **Audio** | Web Audio API | Custom APU sound synthesizer with square, triangle, and noise channels |
+| **Input** | HTML5 Gamepad API | Plug-and-play mapping for Xbox, PlayStation, Switch, and retro USB pads |
+| **AI Assistants** | Gemini 2.5 Flash / Pro (Server Proxy)| REA (Reverse Engineer Anything) assistant and Retro Box Art Studio |
 
 ---
 
-## 🔒 Security, Privacy & Local-First Architecture
-
-- **100% Local-First Ingestion**: Your ROMs are parsed, hashed, and executed entirely inside your browser's sandboxed client runtime. No game binaries are ever transmitted to external servers.
-- **Zero In-Game Telemetry**: No third-party trackers, analytics, or surveillance scripts.
-- **Safe Server Proxying**: Gemini AI API interactions (reverse engineering analysis and box art generation) run exclusively through secure server endpoints without exposing credentials to the client.
-
----
-
-## 🛠️ Local Development & Manual Building
+## ⚡ Installation & Development Instructions
 
 ### Prerequisites
-- Node.js 20 or higher
-- npm 9 or higher
+- **Node.js**: `v20.x` or higher
+- **npm**: `v9.x` or higher
+- Modern Web Browser: Google Chrome, Microsoft Edge, Brave, Mozilla Firefox, or Safari with WebAssembly enabled.
 
-### Installation & Development Server
+### 1. Clone & Install Dependencies
 ```bash
 # Clone the repository
 git clone https://github.com/your-username/recompstation.git
 cd recompstation
 
-# Install dependencies
+# Clean install dependencies
 npm install
-
-# Start development server on port 3000
-npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your web browser.
+### 2. Run Local Development Server
+```bash
+npm run dev
+```
+Open your browser and navigate to `http://localhost:3000`.
 
-### Building Web Production Bundle
+### 3. Build Production Web Application
 ```bash
 npm run build
 ```
-The compiled static assets are output to `dist/`.
+The optimized static bundle will be emitted to `dist/`.
 
-### Building Standalone Windows `.exe` Locally
-If you have a Windows machine (or Wine configured on Linux/macOS):
+### 4. Package Windows Executable (Zip-Ready)
+Package the build output into a complete, zero-dependency zip archive ready for Windows distribution:
 ```bash
-# Build web assets and package Windows NSIS installer + Portable executable
+npm run package:win-zip
+```
+This generates:
+- `release/RecompStation-win-x64/` (unpacked standalone distribution with `Launch-RecompStation.bat`)
+- `release/RecompStation-Windows-x64.zip` (compressed archive)
+- `release/SHA256SUMS.txt` (cryptographic integrity hash)
+
+### 5. Build Standalone Windows `.exe` Installer
+To build full NSIS installer (`.exe`) and portable executables using `electron-builder`:
+```bash
 npm run dist:win
 ```
-The generated `.exe` files will be saved in the `release/` folder:
-- `release/RecompStation Setup 0.0.0.exe`
-- `release/RecompStation 0.0.0.exe`
 
 ---
 
-## 📁 Repository Structure
+## 🚀 Automated GitHub Deployment & CI/CD
 
-```text
-├── .github/
-│   └── workflows/
-│       ├── deploy.yml             # Automated GitHub Pages CI/CD
-│       └── build-executable.yml   # Windows .exe packaging & release automation
-├── electron/
-│   └── main.cjs                  # Electron main process with WebGL & Wasm flags
-├── public/
-│   ├── github-banner.jpg         # High-resolution repository banner
-│   └── favicon.ico               # Application retro icon
-├── src/
-│   ├── assets/                   # Vector and raster assets
-│   ├── components/               # UI components (RomUpload, PlayerModal, PerformanceMonitor, etc.)
-│   ├── engines/                  # Core engines (NesEngine, GameBoyEngine, Chip8Engine, WasmRunner)
-│   ├── services/                 # Binary parser, checksums, entropy, disassembler, REA agent
-│   ├── App.tsx                   # Main platform application layout and routing
-│   └── main.tsx                  # Application bootstrap
-├── server.ts                     # Full-stack Express server with Gemini AI proxy
-├── package.json                  # Dependencies, scripts, and electron-builder configuration
-└── vite.config.ts                # Vite configuration with Tailwind CSS v4
-```
+RecompStation includes pre-configured GitHub Actions workflows located in `.github/workflows/`:
+
+### 1. GitHub Pages Auto-Deployment (`deploy.yml`)
+On every push to the `main` branch, the workflow:
+- Sets up Node.js 20 on an Ubuntu runner.
+- Builds the production Vite web application.
+- Runs `scripts/package-win-dist.js` to create the Windows zip package.
+- Uploads the Windows zip bundle as a downloadable artifact in the GitHub Actions run.
+- Deploys the static web app to **GitHub Pages** with zero manual configuration.
+
+**Setup in GitHub:**
+1. Go to your repository **Settings** → **Pages**.
+2. Set **Build and deployment** → **Source** to **GitHub Actions**.
+
+### 2. Standalone Windows Executable Builder (`build-executable.yml`)
+- Triggers automatically when pushing release tags (e.g., `v1.0.0`) or manually via the GitHub Actions UI (**Run workflow** button).
+- Runs on a native `windows-latest` VM.
+- Generates `RecompStation Setup *.exe` and portable `RecompStation *.exe`.
+- Publishes `.exe` binaries and SHA-256 checksums directly to **GitHub Releases**.
 
 ---
 
-## ⚖️ Legal Disclaimer
+## ⚖️ Legal & Licensing Compliance Notices
 
-*RecompStation is an educational and analytical research software platform designed to facilitate binary analysis, static recompilation research, and the preservation of digital interactive media. Users are solely responsible for ensuring they possess legal rights or physical backup copies of any ROM files or software executed. RecompStation is an independent open-source project and is not affiliated with, authorized, endorsed, or sponsored by Nintendo Co., Ltd., Sony Interactive Entertainment, or any of their affiliates.*
+### ROM Usage & Safe Harbor Policy
+RecompStation is developed strictly as a digital preservation research platform, binary disassembler, and technical emulation workbench. Please review the following compliance principles:
+
+1. **User Responsibility & Ownership**: Users must only load game ROMs and binaries that they have legally dumped from physical cartridges, optical discs, or storage media they legitimately own, or public domain homebrew software.
+2. **No Proprietary Assets Included**: This repository does not contain, distribute, or link to any copyrighted game ROMs, proprietary system BIOS files, cryptographic encryption keys, or trademarked assets.
+3. **Clean-Room Implementation**: All internal micro-interpreter cores (MOS 6502, Sharp SM83, CHIP-8) are clean-room implementations built from publicly accessible hardware documentation and timing specifications.
+4. **Third-Party Trademarks**: Nintendo, Game Boy, Nintendo 64, PlayStation, and related trademarks belong to their respective copyright holders. Reference to these platforms is strictly for hardware identification, compatibility assessment, and educational analysis under fair use guidelines.
+5. **DMCA & Copyright Compliance**: If you believe any content in this project infringes upon your copyright, please open an issue or contact the repository maintainers for immediate review and resolution.
 
 ---
+
+## 📄 License
+
+Distributed under the **MIT License**. See `LICENSE` for more information.
 
 <p align="center">
-  Crafted with ❤️ for retro computing preservation and high-performance WebAssembly engineering.
+  <sub>Built for game preservation engineers, reverse engineers, and retro computing enthusiasts.</sub>
 </p>

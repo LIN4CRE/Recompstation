@@ -234,12 +234,14 @@ export class WebAssemblyRunner {
 
   public saveState(): string {
     if (this.nes) return this.nes.saveState();
+    if (this.gb) return this.gb.saveState();
     if (this.chip8) return this.chip8.saveState();
     return JSON.stringify({ timestamp: Date.now(), platform: this.platform });
   }
 
   public loadState(stateStr: string): void {
     if (this.nes) this.nes.loadState(stateStr);
+    if (this.gb) this.gb.loadState(stateStr);
     if (this.chip8) this.chip8.loadState(stateStr);
   }
 

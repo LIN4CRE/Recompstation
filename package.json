@@ -12,6 +12,7 @@
     "clean": "rm -rf dist server.js release",
     "lint": "tsc --noEmit",
     "package:win": "vite build && electron-builder --win --x64",
+    "package:win-zip": "npm run build && node scripts/package-win-dist.js",
     "dist:win": "vite build && electron-builder --win --x64",
     "build:desktop": "vite build && electron-builder --win --x64 --dir"
   },

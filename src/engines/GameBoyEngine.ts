@@ -419,6 +419,39 @@ export class GameBoyEngine {
     this.ctx.putImageData(this.imageData, 0, 0);
   }
 
+  public saveState(): string {
+    return JSON.stringify({
+      a: this.a, f: this.f, b: this.b, c: this.c,
+      d: this.d, e: this.e, h: this.h, l: this.l,
+      sp: this.sp, pc: this.pc,
+      romBank: this.romBank, ramBank: this.ramBank,
+      lcdc: this.lcdc, stat: this.stat, scy: this.scy, scx: this.scx, ly: this.ly,
+      bgp: this.bgp, obp0: this.obp0, obp1: this.obp1,
+      vram: Array.from(this.vram),
+      wram: Array.from(this.wram),
+      hram: Array.from(this.hram),
+      oam: Array.from(this.oam),
+    });
+  }
+
+  public loadState(stateStr: string): void {
+    try {
+      const s = JSON.parse(stateStr);
+      this.a = s.a; this.f = s.f; this.b = s.b; this.c = s.c;
+      this.d = s.d; this.e = s.e; this.h = s.h; this.l = s.l;
+      this.sp = s.sp; this.pc = s.pc;
+      this.romBank = s.romBank; this.ramBank = s.ramBank;
+      this.lcdc = s.lcdc; this.stat = s.stat; this.scy = s.scy; this.scx = s.scx; this.ly = s.ly;
+      this.bgp = s.bgp; this.obp0 = s.obp0; this.obp1 = s.obp1;
+      if (s.vram) this.vram.set(s.vram);
+      if (s.wram) this.wram.set(s.wram);
+      if (s.hram) this.hram.set(s.hram);
+      if (s.oam) this.oam.set(s.oam);
+    } catch (e) {
+      console.error('Failed to restore Game Boy save state:', e);
+    }
+  }
+
   public getStats() {
     return {
       fps: this.currentFps,
@@ -431,3 +464,4 @@ export class GameBoyEngine {
     };
   }
 }
+
