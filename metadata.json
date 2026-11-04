@@ -1,0 +1,6 @@
+{
+  "name": "RecompStation - ROM Recompilation & Instant Browser Gaming Platform",
+  "description": "Upload legally obtained game ROMs for automated binary analysis, static recompilation, WebAssembly emulation, and instant browser gaming.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
