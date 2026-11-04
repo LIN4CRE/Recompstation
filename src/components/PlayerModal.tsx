@@ -38,7 +38,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ game, onClose }) => {
   const [volume, setVolume] = useState(80);
   const [showControlsHelp, setShowControlsHelp] = useState(false);
   const [showTouchControls, setShowTouchControls] = useState(false);
-  const [showPerfMonitor, setShowPerfMonitor] = useState(true);
+  const [showPerformance, setShowPerformance] = useState<boolean>(false);
   const [stats, setStats] = useState<PerformanceStats>({
     fps: 60,
     frameTime: 16.6,
@@ -108,7 +108,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ game, onClose }) => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'F3') {
         e.preventDefault();
-        setShowPerfMonitor((prev) => !prev);
+        setShowPerformance((prev) => !prev);
         return;
       }
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
@@ -272,9 +272,9 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ game, onClose }) => {
 
         {/* Real-time HUD Performance Pill */}
         <button
-          onClick={() => setShowPerfMonitor(!showPerfMonitor)}
+          onClick={() => setShowPerformance(!showPerformance)}
           className={`hidden md:flex items-center space-x-3 px-3 py-1 border rounded-lg font-mono text-xs transition-all ${
-            showPerfMonitor
+            showPerformance
               ? 'bg-[#182235] border-cyan-500/60 text-cyan-300 shadow-sm shadow-cyan-500/10'
               : 'bg-[#131926] border-slate-800 text-slate-400 hover:text-white'
           }`}
@@ -316,8 +316,8 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ game, onClose }) => {
         {/* Real-Time High-Frequency Technical Performance Monitor Overlay */}
         <PerformanceMonitor
           metadata={executionMetadata}
-          isVisible={showPerfMonitor}
-          onClose={() => setShowPerfMonitor(false)}
+          isVisible={showPerformance}
+          onClose={() => setShowPerformance(false)}
         />
 
         <div
@@ -478,16 +478,16 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ game, onClose }) => {
         <div className="flex items-center space-x-3">
           {/* Performance Monitor HUD Toggle */}
           <button
-            onClick={() => setShowPerfMonitor(!showPerfMonitor)}
+            onClick={() => setShowPerformance(!showPerformance)}
             className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-mono border transition-all ${
-              showPerfMonitor
+              showPerformance
                 ? 'bg-cyan-950/80 text-cyan-400 border-cyan-800'
                 : 'bg-[#141b2b] text-slate-400 border-slate-800'
             }`}
-            title="Toggle Technical Performance Monitor Overlay"
+            title="Toggle Technical Performance Monitor Overlay (or press F3)"
           >
             <Activity className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden sm:inline">HUD {showPerfMonitor ? 'ON' : 'OFF'}</span>
+            <span className="hidden sm:inline">HUD {showPerformance ? 'ON' : 'OFF'}</span>
           </button>
 
           {/* CRT Scanline Toggle */}

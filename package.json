@@ -3,13 +3,49 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build",
     "start": "node server.ts",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "clean": "rm -rf dist server.js release",
+    "lint": "tsc --noEmit",
+    "package:win": "vite build && electron-builder --win --x64",
+    "dist:win": "vite build && electron-builder --win --x64",
+    "build:desktop": "vite build && electron-builder --win --x64 --dir"
+  },
+  "build": {
+    "appId": "com.recompstation.app",
+    "productName": "RecompStation",
+    "copyright": "Copyright © 2026 RecompStation Contributors",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "RecompStation"
+    }
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

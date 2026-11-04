@@ -1,0 +1,109 @@
+name: Build Windows Executable (.exe)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: false
+        default: 'v1.0.0'
+      create_release:
+        description: 'Publish release with downloadable .exe assets'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-exe:
+    name: Build Windows x64 Executable
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Web Application
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Package Windows Executables (.exe)
+        run: |
+          npx --yes electron-builder --win --x64
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate SHA-256 Checksums
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path release/*.exe | ForEach-Object {
+            $hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash
+            "$hash  $($_.Name)" | Out-File -FilePath release/SHA256SUMS.txt -Append -Encoding utf8
+          }
+          Get-Content release/SHA256SUMS.txt
+
+      - name: Upload Artifacts (Downloadable from GitHub Actions Run)
+        uses: actions/upload-artifact@v4
+        with:
+          name: RecompStation-Windows-Binaries
+          path: |
+            release/*.exe
+            release/SHA256SUMS.txt
+          retention-days: 30
+
+      - name: Determine Tag Version
+        id: vars
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "tag_name=${{ github.event.inputs.release_version || 'v1.0.0' }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release & Upload .exe Assets
+        if: startsWith(github.ref, 'refs/tags/') || github.event.inputs.create_release == true || github.event.inputs.create_release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag_name }}
+          name: RecompStation ${{ steps.vars.outputs.tag_name }}
+          draft: false
+          prerelease: false
+          files: |
+            release/*.exe
+            release/SHA256SUMS.txt
+          body: |
+            ## RecompStation Windows Release (${{ steps.vars.outputs.tag_name }})
+
+            ### 🎮 Download Executables
+            - **`RecompStation Setup *.exe`**: Standard Windows installer with desktop and start menu shortcuts.
+            - **`RecompStation *.exe`**: Zero-install standalone portable edition. Run directly from USB or any folder.
+
+            ### 🚀 Features Included
+            - Complete local-first ROM binary analysis (CRC32, MD5, SHA-1, entropy calculation).
+            - Multi-core WebAssembly emulation engines (NES, Game Boy / Color, CHIP-8) with SIMD acceleration.
+            - Static recompilation recommendation matrix (N64Recomp, Zelda64Recomp, SM64, Sonic CD, Ship of Harkinian).
+            - Built-in REA (Reverse Engineer Anything) Gemini AI Agent for disassembly analysis and code reconstruction.
+            - Retro Box Art Studio powered by Gemini generative imagery.
+            - Real-time `PerformanceMonitor` telemetry HUD overlay (FPS, frame time, heap memory, pacing sparkline).
+            - Native gamepad & controller support with zero telemetry and full privacy.
+
+            ### 🔐 Integrity Checksums (SHA-256)
+            Please see attached `SHA256SUMS.txt` to verify file integrity.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

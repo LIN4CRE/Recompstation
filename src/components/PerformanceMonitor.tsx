@@ -29,14 +29,18 @@ export interface ExecutionMetadata {
 export type OverlayCorner = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
 
 export interface PerformanceMonitorProps {
-  metadata: ExecutionMetadata;
+  metadata?: ExecutionMetadata;
   isVisible?: boolean;
   onClose?: () => void;
   defaultCorner?: OverlayCorner;
 }
 
 export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
-  metadata,
+  metadata = {
+    platform: 'Console',
+    executionMethod: 'WebAssembly Engine',
+    backend: 'Canvas 2D / WebGL',
+  },
   isVisible = true,
   onClose,
   defaultCorner = 'top-right',
