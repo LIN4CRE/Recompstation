@@ -26,12 +26,14 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/checkout@v7
         with:
-          node-version: 20
+          persist-credentials: false
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
           cache: 'npm'
 
       - name: Install Dependencies
@@ -41,6 +43,7 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+          BASE_PATH: './'
 
       - name: Package Windows Executables (.exe)
         run: |
@@ -58,7 +61,7 @@ jobs:
           Get-Content release/SHA256SUMS.txt
 
       - name: Upload Artifacts (Downloadable from GitHub Actions Run)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: RecompStation-Windows-Binaries
           path: |
