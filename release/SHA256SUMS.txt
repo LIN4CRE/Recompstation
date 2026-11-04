@@ -1,1 +1,2 @@
 ad5ef20de1802055d1c69eddef637e09904f5ab96ef058c3f469e0b4ba29f14f  RecompStation-Windows-x64.zip
+3861e90482f3e2adfb2f58e727d71fe6282f8e2dd443e66e7467f4f2ae0dddce  RecompStation-Windows-x64.zip

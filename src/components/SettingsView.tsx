@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Settings,
   Cpu,
@@ -8,20 +8,39 @@ import {
   CheckCircle,
   AlertCircle,
   Download,
+  Upload,
   Trash2,
+  Layers,
+  Database,
+  FileJson,
+  RefreshCw,
+  Sparkles,
 } from 'lucide-react';
-import { GameItem } from '../types/rom';
+import { GameItem, SaveState } from '../types/rom';
+import { getAllSaveStates, importAllSaveStates } from '../services/storage';
 
 interface SettingsViewProps {
   games: GameItem[];
   onClearLibrary: () => void;
+  onRefreshLibrary?: () => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ games, onClearLibrary }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({
+  games,
+  onClearLibrary,
+  onRefreshLibrary,
+}) => {
   const [hasSimd, setHasSimd] = useState<boolean | null>(null);
   const [webglInfo, setWebglInfo] = useState<string>('Detecting...');
   const [audioInfo, setAudioInfo] = useState<string>('Detecting...');
   const [storageUsed, setStorageUsed] = useState<string>('Calculating...');
+
+  // Save states store diagnostics & export/import
+  const [saveStatesCount, setSaveStatesCount] = useState<number>(0);
+  const [saveStatesSizeKB, setSaveStatesSizeKB] = useState<number>(0);
+  const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [isImporting, setIsImporting] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // 1. Test WASM SIMD
@@ -68,9 +87,116 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ games, onClearLibrar
         setStorageUsed(`${usedMb} MB used of ${quotaMb} MB available`);
       });
     }
+
+    // 5. Query save states from IndexedDB
+    fetchSaveStatesSummary();
   }, []);
 
-  const handleExportBackup = () => {
+  const fetchSaveStatesSummary = async () => {
+    try {
+      const allSaves = await getAllSaveStates();
+      setSaveStatesCount(allSaves.length);
+      const totalBytes = allSaves.reduce((acc, s) => acc + (s.size || (s.data ? s.data.length : 0)), 0);
+      setSaveStatesSizeKB(Math.round(totalBytes / 1024));
+    } catch (e) {
+      console.error('Failed to load save states summary:', e);
+    }
+  };
+
+  // Export Entire IndexedDB Save State Store as JSON
+  const handleExportSaveStatesStore = async () => {
+    try {
+      const allSaves = await getAllSaveStates();
+      if (allSaves.length === 0) {
+        setStatusMessage({ text: 'No save states found in IndexedDB to export.', type: 'error' });
+        setTimeout(() => setStatusMessage(null), 3500);
+        return;
+      }
+
+      const exportPayload = {
+        app: 'RecompStation',
+        version: '1.0.0',
+        exportedAt: new Date().toISOString(),
+        store: 'saves',
+        totalRecords: allSaves.length,
+        states: allSaves,
+      };
+
+      const jsonStr = JSON.stringify(exportPayload, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = `RecompStation_All_SaveStates_${Date.now()}.json`;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      setStatusMessage({
+        text: `Exported ${allSaves.length} save states (${Math.round(blob.size / 1024)} KB) successfully!`,
+        type: 'success',
+      });
+      setTimeout(() => setStatusMessage(null), 4000);
+    } catch (err: any) {
+      setStatusMessage({ text: `Export failed: ${err.message}`, type: 'error' });
+      setTimeout(() => setStatusMessage(null), 4000);
+    }
+  };
+
+  // Import Entire IndexedDB Save State Store from JSON
+  const handleImportSaveStatesFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    const reader = new FileReader();
+
+    reader.onload = async (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parsed = JSON.parse(text);
+
+        // Check format: either direct array of SaveState or export payload with .states
+        let statesToImport: SaveState[] = [];
+        if (Array.isArray(parsed)) {
+          statesToImport = parsed;
+        } else if (parsed && Array.isArray(parsed.states)) {
+          statesToImport = parsed.states;
+        } else {
+          throw new Error('Invalid save state JSON format. Expected an array of save state objects.');
+        }
+
+        if (statesToImport.length === 0) {
+          throw new Error('No valid save state records found in this file.');
+        }
+
+        const { importedCount } = await importAllSaveStates(statesToImport);
+        await fetchSaveStatesSummary();
+        onRefreshLibrary?.();
+
+        setStatusMessage({
+          text: `Successfully imported ${importedCount} save states into IndexedDB!`,
+          type: 'success',
+        });
+        setTimeout(() => setStatusMessage(null), 4000);
+      } catch (err: any) {
+        setStatusMessage({ text: `Import failed: ${err.message}`, type: 'error' });
+        setTimeout(() => setStatusMessage(null), 5000);
+      } finally {
+        setIsImporting(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+
+    reader.onerror = () => {
+      setStatusMessage({ text: 'Failed to read the selected file.', type: 'error' });
+      setIsImporting(false);
+      setTimeout(() => setStatusMessage(null), 4000);
+    };
+
+    reader.readAsText(file);
+  };
+
+  const handleExportLibraryBackup = () => {
     const backupData = games.map((g) => ({
       title: g.title,
       platform: g.platform,
@@ -86,19 +212,44 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ games, onClearLibrar
     link.href = url;
     link.click();
     URL.revokeObjectURL(url);
+
+    setStatusMessage({
+      text: `Exported metadata for ${games.length} games.`,
+      type: 'success',
+    });
+    setTimeout(() => setStatusMessage(null), 3000);
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Title */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center space-x-3">
-          <Settings className="w-8 h-8 text-cyan-400" />
-          <span>Settings & Hardware Diagnostics</span>
-        </h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Inspect device acceleration capabilities, storage quotas, and legal notices.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center space-x-3">
+            <Settings className="w-8 h-8 text-cyan-400" />
+            <span>Settings & Hardware Diagnostics</span>
+          </h1>
+          <p className="mt-1 text-sm text-slate-400">
+            Inspect device acceleration capabilities, manage save states backups, and storage quotas.
+          </p>
+        </div>
+
+        {statusMessage && (
+          <div
+            className={`px-4 py-2 rounded-xl border flex items-center space-x-2 font-mono text-xs shadow-lg animate-fade-in ${
+              statusMessage.type === 'success'
+                ? 'bg-emerald-950/80 border-emerald-600 text-emerald-300'
+                : 'bg-red-950/80 border-red-600 text-red-300'
+            }`}
+          >
+            {statusMessage.type === 'success' ? (
+              <CheckCircle className="w-4 h-4 text-emerald-400" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-red-400" />
+            )}
+            <span>{statusMessage.text}</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -152,16 +303,79 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ games, onClearLibrar
           </div>
         </div>
 
+        {/* IndexedDB Save States Store Export & Import */}
+        <div className="p-6 rounded-2xl bg-[#10141e]/90 border border-[#273043] space-y-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-white flex items-center space-x-2">
+                <Layers className="w-5 h-5 text-cyan-400" />
+                <span>Save States Store (IndexedDB Export & Import)</span>
+              </h2>
+              <span className="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-400 font-mono text-[10px] font-bold">
+                CROSS-BROWSER
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+              Export your entire IndexedDB save state store as a unified JSON archive. You can import this JSON file into another browser instance (e.g. Chrome, Firefox, Edge, or the native Windows executable) to seamlessly transfer all your gameplay states and progress.
+            </p>
+
+            <div className="grid grid-cols-2 gap-3 mb-6 font-mono text-xs">
+              <div className="p-3 rounded-xl bg-[#141b27] border border-slate-800">
+                <span className="text-slate-500 text-[10px] block">TOTAL SAVE STATES</span>
+                <span className="text-lg font-bold text-white">{saveStatesCount}</span>
+                <span className="text-slate-500 text-[10px] block">Across all games</span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#141b27] border border-slate-800">
+                <span className="text-slate-500 text-[10px] block">STORE PAYLOAD SIZE</span>
+                <span className="text-lg font-bold text-cyan-400">{saveStatesSizeKB} KB</span>
+                <span className="text-slate-500 text-[10px] block">IndexedDB memory</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-4 border-t border-slate-800">
+            {/* Hidden file input for import */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImportSaveStatesFile}
+              accept=".json,application/json"
+              className="hidden"
+            />
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={handleExportSaveStatesStore}
+                className="flex-1 flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-bold transition-all shadow-sm"
+              >
+                <Download className="w-4 h-4 text-cyan-400" />
+                <span>Export Save States (.json)</span>
+              </button>
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isImporting}
+                className="flex-1 flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-[#161d2b] hover:bg-[#1d2638] text-purple-300 border border-purple-500/40 text-xs font-mono font-bold transition-all shadow-sm"
+              >
+                <Upload className="w-4 h-4 text-purple-400" />
+                <span>{isImporting ? 'Importing...' : 'Import Save States (.json)'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Local Storage & Library Management */}
         <div className="p-6 rounded-2xl bg-[#10141e]/90 border border-[#273043] space-y-5 flex flex-col justify-between">
           <div>
             <h2 className="text-base font-bold text-white flex items-center space-x-2 mb-4">
               <HardDrive className="w-5 h-5 text-purple-400" />
-              <span>Library Persistence & Backup</span>
+              <span>Library Metadata & Cache Management</span>
             </h2>
 
             <p className="text-xs text-slate-400 mb-6 leading-relaxed">
-              All your ROM binaries, save states, and generated cover art are stored strictly on your local device via IndexedDB. Nothing is uploaded to remote servers. You can export a JSON metadata backup or clear the local cache at any time.
+              All your ROM binaries, technical analysis reports, and generated cover art are stored strictly on your local device via IndexedDB. Nothing is uploaded to remote servers. You can export a library metadata backup or clear the local cache at any time.
             </p>
 
             <div className="space-y-3 font-mono text-xs">
@@ -178,17 +392,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ games, onClearLibrar
 
           <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-800">
             <button
-              onClick={handleExportBackup}
+              onClick={handleExportLibraryBackup}
               className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-[#161d2b] hover:bg-[#1d2638] text-slate-200 border border-slate-700 text-xs font-mono font-bold transition-all"
             >
-              <Download className="w-4 h-4 text-cyan-400" />
-              <span>Export Metadata Backup</span>
+              <FileJson className="w-4 h-4 text-cyan-400" />
+              <span>Export Library Metadata</span>
             </button>
 
             <button
               onClick={() => {
                 if (confirm('Clear all local games and save states? This cannot be undone.')) {
                   onClearLibrary();
+                  setSaveStatesCount(0);
+                  setSaveStatesSizeKB(0);
+                  setStatusMessage({ text: 'Local library and IndexedDB cache cleared.', type: 'success' });
+                  setTimeout(() => setStatusMessage(null), 3000);
                 }
               }}
               className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-900/60 text-xs font-mono font-bold transition-all"
@@ -196,6 +414,45 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ games, onClearLibrar
               <Trash2 className="w-4 h-4" />
               <span>Clear Local Storage</span>
             </button>
+          </div>
+        </div>
+
+        {/* Global Keyboard Shortcuts Card */}
+        <div className="p-6 rounded-2xl bg-[#10141e]/90 border border-[#273043] space-y-4">
+          <h2 className="text-base font-bold text-white flex items-center space-x-2">
+            <Keyboard className="w-5 h-5 text-amber-400" />
+            <span>Global Hotkeys & Command Palette</span>
+          </h2>
+
+          <p className="text-xs text-slate-400 font-mono leading-relaxed">
+            RecompStation includes global shortcuts for instant system navigation and game launching:
+          </p>
+
+          <div className="space-y-2 font-mono text-xs">
+            <div className="p-2.5 rounded-lg bg-[#141b27] border border-slate-800 flex justify-between items-center">
+              <span className="text-slate-300">Open Command Palette</span>
+              <kbd className="px-2 py-1 rounded bg-[#1e2738] border border-slate-700 text-cyan-300 font-bold text-[11px]">
+                Cmd/Ctrl + K
+              </kbd>
+            </div>
+            <div className="p-2.5 rounded-lg bg-[#141b27] border border-slate-800 flex justify-between items-center">
+              <span className="text-slate-300">Quick Save State (In Player)</span>
+              <kbd className="px-2 py-1 rounded bg-[#1e2738] border border-slate-700 text-cyan-300 font-bold text-[11px]">
+                F2
+              </kbd>
+            </div>
+            <div className="p-2.5 rounded-lg bg-[#141b27] border border-slate-800 flex justify-between items-center">
+              <span className="text-slate-300">Quick Load State (In Player)</span>
+              <kbd className="px-2 py-1 rounded bg-[#1e2738] border border-slate-700 text-purple-300 font-bold text-[11px]">
+                F4
+              </kbd>
+            </div>
+            <div className="p-2.5 rounded-lg bg-[#141b27] border border-slate-800 flex justify-between items-center">
+              <span className="text-slate-300">Toggle Technical Telemetry HUD</span>
+              <kbd className="px-2 py-1 rounded bg-[#1e2738] border border-slate-700 text-emerald-300 font-bold text-[11px]">
+                F3
+              </kbd>
+            </div>
           </div>
         </div>
       </div>
@@ -214,7 +471,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ games, onClearLibrar
             <strong className="text-slate-300">Local-First Architecture:</strong> Uploaded ROM files are decoded and run locally in your browser sandbox using WebAssembly. Files never leave your device.
           </li>
           <li>
-            <strong className="text-slate-300">Open-Source Attribution:</strong> Acknowledges research and open-source contributions from N64Recomp, Ship of Harkinian (Harbour Masters), sm64-port, Wipeout Rewrite, and the global homebrew community.
+            <strong className="text-slate-300">Save State Portability:</strong> Save states generated in RecompStation can be exported as standard JSON data blobs and imported into any other browser or desktop instance.
           </li>
         </ul>
       </div>

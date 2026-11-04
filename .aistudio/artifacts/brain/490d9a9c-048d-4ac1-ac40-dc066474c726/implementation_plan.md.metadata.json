@@ -1,0 +1,6 @@
+{
+  "summary": "Comprehensive implementation plan to merge Recompa (LIN4CRE/Recompa) into RecompStation. Unifies Recompa's canonical binary detection, 4MB No-Intro DAT catalogue, 6-tier execution planner, algorithmic 6502 self-test cartridge, live session verification, and native CLI endpoints into RecompStation's full-stack Express + React UI, Command Palette, Save States manager, and Windows packaging.",
+  "updatedAt": "2026-11-04T20:09:23.927902169Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

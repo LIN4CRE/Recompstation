@@ -135,3 +135,34 @@ export async function deleteGameState(id: string): Promise<void> {
   });
 }
 
+export async function getAllSaveStates(): Promise<SaveState[]> {
+  const db = await getDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('saves', 'readonly');
+    const store = tx.objectStore('saves');
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function importAllSaveStates(states: SaveState[]): Promise<{ importedCount: number }> {
+  const db = await getDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('saves', 'readwrite');
+    const store = tx.objectStore('saves');
+    let importedCount = 0;
+
+    for (const state of states) {
+      if (state && state.id && state.gameId && state.data) {
+        store.put(state);
+        importedCount++;
+      }
+    }
+
+    tx.oncomplete = () => resolve({ importedCount });
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Header, NavTab } from './components/Header';
 import { GameLibraryView } from './components/GameLibraryView';
 import { UploadView } from './components/UploadView';
@@ -7,11 +7,13 @@ import { ReaAgentView } from './components/ReaAgentView';
 import { BoxArtStudio } from './components/BoxArtStudio';
 import { CompatibilityDatabaseView } from './components/CompatibilityDatabaseView';
 import { SettingsView } from './components/SettingsView';
+import { CommandPalette } from './components/CommandPalette';
 import { GameItem, RomAnalysisReport } from './types/rom';
 import {
   getAllGamesFromLibrary,
   saveGameToLibrary,
   deleteGameFromLibrary,
+  getAllSaveStates,
 } from './services/storage';
 import { BUILTIN_HOMEBREWS } from './engines/BuiltinRoms';
 import { analyzeRom } from './services/romParser';
@@ -21,17 +23,29 @@ export default function App() {
   const [games, setGames] = useState<GameItem[]>([]);
   const [activePlayingGame, setActivePlayingGame] = useState<GameItem | null>(null);
 
+  // Command Palette State
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
   // Cross-component state
   const [activeReport, setActiveReport] = useState<RomAnalysisReport | null>(null);
   const [activeRawData, setActiveRawData] = useState<Uint8Array | null>(null);
   const [boxArtTargetGame, setBoxArtTargetGame] = useState<GameItem | null>(null);
 
-  // Load games from IndexedDB on startup
+  // Global Keyboard Shortcut: Cmd/Ctrl + K for Command Palette
   useEffect(() => {
-    loadGames();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const loadGames = async () => {
+  // Load games from IndexedDB on startup
+  const loadGames = useCallback(async () => {
     try {
       const stored = await getAllGamesFromLibrary();
       if (stored.length > 0) {
@@ -43,7 +57,11 @@ export default function App() {
     } catch (e) {
       console.warn('IndexedDB initial load error:', e);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadGames();
+  }, [loadGames]);
 
   const seedDefaultHomebrews = async () => {
     try {
@@ -120,6 +138,34 @@ export default function App() {
     setActivePlayingGame(null);
   };
 
+  const handleExportAllSaves = async () => {
+    try {
+      const allSaves = await getAllSaveStates();
+      if (allSaves.length === 0) {
+        alert('No save states found in IndexedDB to export.');
+        return;
+      }
+      const exportPayload = {
+        app: 'RecompStation',
+        version: '1.0.0',
+        exportedAt: new Date().toISOString(),
+        store: 'saves',
+        totalRecords: allSaves.length,
+        states: allSaves,
+      };
+      const jsonStr = JSON.stringify(exportPayload, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = `RecompStation_All_SaveStates_${Date.now()}.json`;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      alert(`Export failed: ${e.message}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0c10] text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
       {/* Navigation Header */}
@@ -133,6 +179,7 @@ export default function App() {
             // Already active, modal opens
           }
         }}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
       {/* Main Tab Content */}
@@ -190,9 +237,25 @@ export default function App() {
           <SettingsView
             games={games}
             onClearLibrary={handleClearLibrary}
+            onRefreshLibrary={loadGames}
           />
         )}
       </main>
+
+      {/* Global Command Palette (Cmd/Ctrl + K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        games={games}
+        onPlayGame={(game) => {
+          setActivePlayingGame(game);
+          handleSaveToLibrary(game);
+        }}
+        onNavigateTab={(tab) => setActiveTab(tab)}
+        onClearCache={handleClearLibrary}
+        onExportSaves={handleExportAllSaves}
+        onAddSampleRoms={seedDefaultHomebrews}
+      />
 
       {/* Instant Play Dedicated Player Modal */}
       {activePlayingGame && (
@@ -211,8 +274,10 @@ export default function App() {
             <span>•</span>
             <span>Static Recompilation & Instant Browser Gaming</span>
           </div>
-          <div>
-            <span>Local-First Sandbox • WebAssembly SIMD • Web Audio 48kHz</span>
+          <div className="flex items-center space-x-3 text-slate-400">
+            <span>Press <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700">Cmd/Ctrl + K</kbd> for Command Hub</span>
+            <span>•</span>
+            <span>Local-First Sandbox</span>
           </div>
         </div>
       </footer>

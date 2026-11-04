@@ -8,6 +8,7 @@ import {
   Settings,
   ShieldCheck,
   Zap,
+  Search,
 } from 'lucide-react';
 
 export type NavTab = 'library' | 'upload' | 'rea' | 'boxart' | 'compatibility' | 'settings';
@@ -18,6 +19,7 @@ interface HeaderProps {
   gameCount: number;
   hasActiveGame: boolean;
   onOpenActiveGame?: () => void;
+  onOpenCommandPalette?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -26,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   gameCount,
   hasActiveGame,
   onOpenActiveGame,
+  onOpenCommandPalette,
 }) => {
   return (
     <header className="border-b border-[#273043] bg-[#0c0f17]/95 backdrop-blur-md sticky top-0 z-40">
@@ -133,8 +136,22 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </nav>
 
-          {/* Active Player quick badge or System Indicator */}
-          <div className="hidden sm:flex items-center space-x-2">
+          {/* Command Palette Button & Active Player quick badge */}
+          <div className="flex items-center space-x-2">
+            {onOpenCommandPalette && (
+              <button
+                onClick={onOpenCommandPalette}
+                className="flex items-center space-x-2 px-2.5 py-1.5 rounded-lg bg-[#141b27] hover:bg-[#1b2333] border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200 transition-all font-mono text-xs"
+                title="Open Command Palette (Cmd/Ctrl + K)"
+              >
+                <Search className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="hidden md:inline text-[11px]">Command Hub</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-400 border border-slate-700 font-bold">
+                  ⌘K
+                </kbd>
+              </button>
+            )}
+
             {hasActiveGame && onOpenActiveGame ? (
               <button
                 onClick={onOpenActiveGame}
@@ -144,7 +161,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>RESUME GAME</span>
               </button>
             ) : (
-              <div className="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#161c28] border border-slate-800 text-[11px] font-mono text-slate-300">
+              <div className="hidden lg:flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#161c28] border border-slate-800 text-[11px] font-mono text-slate-300">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span>LOCAL-FIRST SANDBOX</span>
               </div>
