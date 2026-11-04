@@ -1,4 +1,5 @@
 import { PlatformId } from '../types/rom';
+import { buildTestRom } from '../core/testrom';
 
 export interface BuiltinHomebrew {
   id: string;
@@ -219,4 +220,15 @@ export const BUILTIN_HOMEBREWS: BuiltinHomebrew[] = [
     tags: ['Platformer', 'SM83 CPU', 'Instant Play'],
     data: createMinimalGameBoyHomebrew(),
   },
+  {
+    id: 'recompa-selftest',
+    title: 'Recompa 6502 Self-Test Cartridge',
+    platform: 'nes',
+    author: 'Recompa Core Team',
+    description: 'Algorithmic 6502 self-test cartridge generated dynamically in code to verify PPU vblank, NMI handling, VRAM tile addressing, and palette cycling.',
+    license: 'MIT (Algorithmic / Zero Third-Party ROM Data)',
+    tags: ['Diagnostics', 'Self-Test', '6502 Assembler', 'Cycle Accurate'],
+    data: buildTestRom(),
+  },
 ];
+

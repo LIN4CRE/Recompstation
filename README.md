@@ -5,17 +5,18 @@
 <h1 align="center">RecompStation</h1>
 
 <p align="center">
-  <strong>Next-Generation Static ROM Recompilation, Binary Reverse Engineering & Instant Browser Gaming Platform</strong>
+  <strong>Next-Generation Static ROM Recompilation, Binary Reverse Engineering & Instant Browser Gaming Platform</strong><br />
+  <em>Unified with the High-Precision Core Engine from LIN4CRE/Recompa</em>
 </p>
 
 <p align="center">
   <a href="https://github.com"><img src="https://img.shields.io/badge/GitHub%20Pages-Automated%20Deploy-brightgreen?style=for-the-badge&logo=github-pages" alt="Pages Deploy" /></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/Windows%20Zip%20Package-Ready-blue?style=for-the-badge&logo=windows" alt="Windows Package" /></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/WebAssembly-SIMD%20Accelerated-orange?style=for-the-badge&logo=webassembly" alt="Wasm" /></a>
+  <a href="https://github.com"><img src="https://img.shields.io/badge/No--Intro-DAT%20Catalogue%20(4MB)-crimson?style=for-the-badge&logo=databricks" alt="No-Intro" /></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/IndexedDB-Local--First%20Storage-yellow?style=for-the-badge&logo=databricks" alt="IndexedDB" /></a>
   <a href="https://github.com"><img src="https://img.shields.io/badge/TypeScript-Strict%20Mode-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript" /></a>
-  <a href="https://github.com"><img src="https://img.shields.io/badge/React%2019-Vite%208-61DAFB?style=for-the-badge&logo=react" alt="React 19" /></a>
-  <a href="https://github.com"><img src="https://img.shields.io/badge/Privacy-100%25%20Local--First-8B5CF6?style=for-the-badge&logo=shield" alt="Local-First" /></a>
+  <a href="https://github.com"><img src="https://img.shields.io/badge/Recompa%20Engine-Integrated-8B5CF6?style=for-the-badge&logo=microchip" alt="Recompa Inside" /></a>
 </p>
 
 ---
@@ -24,12 +25,14 @@
 
 Traditional emulation treats classic game ROMs as opaque binary blobs, re-interpreting machine instructions on top of virtualized hardware cycles. While versatile, this often introduces execution latency, input lag, micro-stutter, and platform lock-in.
 
-**RecompStation** pioneers a **game preservation engineering philosophy**:
+**RecompStation** pioneers a **game preservation engineering philosophy**, unifying the intuitive, responsive desktop and web presentation of RecompStation with the rigorous, deterministic core engine of **Recompa**:
 
-1. **Static Recompilation Over Brute-Force Emulation**: Whenever viable, binary machine code should be analyzed, re-targeted, and statically transformed into native code or modern WebAssembly binaries. This unlocks ultra-high frame rates, true widescreen aspect ratios, frame interpolation, native rendering backends, and deterministic execution.
-2. **100% Local-First Sovereignty & Privacy**: Your personal game dumps, ROM backups, and save states belong solely to you. All binary parsing, hashing, entropy analysis, and execution run strictly client-side inside your browser or native desktop sandbox. No ROM binaries are ever uploaded to remote servers.
-3. **Reproducible Binary Intelligence**: Every file is systematically cataloged with multi-algorithm cryptographic verification (CRC32, MD5, SHA-1), Shannon information entropy mapping, and multi-architecture instruction disassembly (MOS 6502, Sharp SM83, CHIP-8, MIPS R4300i).
-4. **Zero Dark Patterns & Zero Bloat**: No analytics trackers, no telemetry, no subscription paywalls, and no adware. Just pure computing performance and digital preservation.
+1. **Deterministic 6-Tier Execution Planner**: Evaluates ROM binaries against 6 execution tiers—from browser-native WebAssembly static recompilations to clean-room source ports, optimized WASM cores, and JIT interpreters.
+2. **4MB No-Intro DAT Catalogue**: $O(1)$ cryptographic title and region matching using SHA-1 and CRC32 against verified preservation databases (`public/data/catalogue/`).
+3. **Canonical Payload Normalization**: Automatically strips copier headers (SMC/SWC 512-byte headers, iNES 512-byte trainers), unscrambles SMD interleaved byte pairs, and converts N64 byte-swapped (`.v64`, `.n64`) dumps into canonical big-endian (`.z64`) payloads.
+4. **Programmatic 6502 Self-Test Cartridge**: Generates a verified test ROM entirely in TypeScript without external copyrighted binaries, proving reset vectors, PPU warm-up, NMI interrupts, and palette cycling.
+5. **6-Point Automated Live Session Verification**: Measures live video framebuffers, animation deltas, 60Hz timing pacing, Web Audio latency, gamepad input dispatch, and save state roundtrips.
+6. **100% Local-First Sovereignty & Privacy**: All binary parsing, hashing, entropy analysis, and execution run strictly client-side. No ROM binaries are ever uploaded to remote servers.
 
 ---
 
@@ -39,18 +42,19 @@ RecompStation is architected as an ultra-responsive, reactive single-page applic
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        RecompStation Architecture                       │
+│                   RecompStation Unified Architecture                   │
 └────────────────────────────────────────────────────────────────────────┘
                                     │
     ┌───────────────────────────────┴───────────────────────────────┐
     ▼                                                               ▼
 ┌───────────────────────────────┐               ┌───────────────────────────────┐
-│       UI & Presentation       │               │     Binary Ingestion Engine   │
+│       UI & Presentation       │               │   Recompa Core Subsystems     │
 ├───────────────────────────────┤               ├───────────────────────────────┤
-│ • React 19 Functional Tree    │               │ • Drag-and-drop & ZIP reader  │
-│ • Tailwind CSS v4 Cyber-Deck  │◄──────────────┤ • Magic Byte Sniffing         │
-│ • Lucide Icons & Canvas HUD   │               │ • CRC32 / MD5 / SHA-1 Hashing │
-│ • Real-Time Telemetry Overlay │               │ • Shannon Entropy Profiler    │
+│ • React 19 Functional Tree    │               │ • 4MB No-Intro DAT Lookups    │
+│ • Tailwind CSS v4 Cyber-Deck  │◄──────────────┤ • Canonical Header Stripper   │
+│ • Lucide Icons & Canvas HUD   │               │ • SMD De-interleaver & N64-BE │
+│ • PerformanceMonitor Telemetry│               │ • Deterministic 6-Tier Planner│
+│ • 6-Point Live Verification   │               │ • Programmatic 6502 Self-Test │
 └───────────────────────────────┘               └───────────────┬───────────────┘
                 │                                               │
                 ▼                                               ▼
@@ -60,19 +64,20 @@ RecompStation is architected as an ultra-responsive, reactive single-page applic
 │ • IndexedDB ROM Binary Vault  │               │ • MOS 6502 (NES) Engine       │
 │ • LocalStorage Save States    │◄──────────────┤ • Sharp SM83 (Game Boy/GBC)   │
 │ • Battery SRAM Mirrors        │               │ • CHIP-8 / S-CHIP Interpreter │
-│ • AI Box Art Blob Cache       │               │ • MIPS R4300i (N64) Scanner   │
+│ • JSON Store Export / Import  │               │ • MIPS R4300i (N64) Scanner   │
 └───────────────────────────────┘               └───────────────┬───────────────┘
                                                                 │
                                                                 ▼
                                                 ┌───────────────────────────────┐
-                                                │ Execution & Recompilation     │
+                                                │ Execution & Processing        │
                                                 ├───────────────────────────────┤
-                                                │ • WebAssembly SIMD Interpreters│
-                                                │ • Static Recompilation Matrix │
-                                                │ • Low-Latency Audio Synthesizer│
-                                                │ • Gamepad API Controller Link │
+                                                │ • WebAssembly SIMD Cores      │
+                                                │ • Express Port 3000 Toolchain │
+                                                │ • Ghidra / Rizin CLI Endpoints│
+                                                │ • N64Recomp Static Planner    │
                                                 └───────────────────────────────┘
 ```
+
 
 ### 1. React 19 Frontend
 - High-frequency virtualized rendering pipeline for snappy UI updates during heavy binary processing.

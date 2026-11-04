@@ -14,6 +14,8 @@ import {
   extractAsciiStrings,
 } from './checksum';
 import { lookupGameInCatalog } from './database';
+import { detectFormat } from '../core/detect';
+import { fingerprint } from '../core/catalogue';
 
 export interface ExtractedFile {
   name: string;
@@ -67,22 +69,61 @@ export async function extractRomFiles(file: File | { name: string; data: Uint8Ar
  * Comprehensive parser and binary analyzer for console ROMs
  */
 export async function analyzeRom(fileName: string, data: Uint8Array): Promise<RomAnalysisReport> {
-  const fileSize = data.length;
-  const crc32 = calculateCrc32(data);
-  const [md5, sha1] = await Promise.all([calculateMd5(data), calculateSha1(data)]);
-  const { overall: entropy, buckets: entropyBuckets } = calculateEntropy(data);
-  const strings = extractAsciiStrings(data, 4, 25);
+  // Recompa core format detection & canonical byte extraction (strips copier headers, de-interleaves SMD, converts N64 endianness)
+  const detection = detectFormat(data, fileName);
+  const canonicalData = detection.payload.length > 0 ? detection.payload : data;
 
-  let platform: PlatformId = 'unknown';
-  let platformName = 'Unknown Binary';
-  let gameTitle = '';
+  const fileSize = canonicalData.length;
+  const crc32 = calculateCrc32(canonicalData);
+  const [md5, sha1] = await Promise.all([calculateMd5(canonicalData), calculateSha1(canonicalData)]);
+  const { overall: entropy, buckets: entropyBuckets } = calculateEntropy(canonicalData);
+  const strings = extractAsciiStrings(canonicalData, 4, 25);
+
+  let platform: PlatformId = (detection.platformId as PlatformId) || 'unknown';
+  let platformName = detection.format ? detection.format.label : 'Unknown Binary';
+  let gameTitle = detection.embeddedTitle || '';
   let identified = false;
-  let region = 'Unknown';
+  let region = detection.regionHint ? String(detection.regionHint) : 'Unknown';
   let version = '1.0';
   const headerDetails: Record<string, string | number | boolean> = {};
   const vectorTable: RomVector[] = [];
   const missingDependencies: string[] = [];
   const technicalNotes: string[] = [];
+
+  // Populate facts and header fields from Recompa core detection
+  for (const fact of detection.facts) {
+    headerDetails[fact.label] = fact.value;
+  }
+  for (const [key, val] of Object.entries(detection.header.fields)) {
+    headerDetails[key] = String(val);
+  }
+  for (const err of detection.errors) {
+    technicalNotes.push(`[${err.severity.toUpperCase()}] ${err.message}${err.remedy ? ' (' + err.remedy + ')' : ''}`);
+  }
+
+  // No-Intro DAT catalogue lookup
+  try {
+    const fpResult = await fingerprint({
+      platform: detection.platformId,
+      size: canonicalData.length,
+      crc32,
+      sha1,
+    });
+    if (fpResult.match) {
+      gameTitle = fpResult.match.name;
+      region = fpResult.match.region || region;
+      version = fpResult.match.version || version;
+      identified = true;
+      headerDetails['No-Intro Title'] = fpResult.match.name;
+      headerDetails['Catalogue Region'] = fpResult.match.region;
+      headerDetails['Catalogue Source'] = fpResult.match.source;
+      if (fpResult.match.matchedOn === 'sha1') {
+        headerDetails['Cryptographic Verification'] = 'Matched No-Intro SHA-1 & CRC32';
+      }
+    }
+  } catch (err) {
+    // Non-fatal if catalogue lookup is unavailable
+  }
 
   const lowerName = fileName.toLowerCase();
   const fileExt = fileName.includes('.') ? '.' + fileName.split('.').pop()?.toLowerCase() : '';

@@ -27,11 +27,13 @@ import {
   Settings,
   RefreshCw,
   Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 import { GameItem, PerformanceStats, SaveState } from '../types/rom';
 import { WebAssemblyRunner } from '../engines/WebAssemblyRunner';
 import { saveGameState, getGameSaveStates, deleteGameState } from '../services/storage';
 import { PerformanceMonitor, ExecutionMetadata } from './PerformanceMonitor';
+import { runLiveVerification, VerificationResult } from '../core/verification';
 
 export type GamepadLayoutPreset = 'standard' | 'nintendo' | 'playstation' | 'arcade';
 
@@ -63,6 +65,9 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ game, onClose }) => {
   const [showPerformance, setShowPerformance] = useState<boolean>(false);
   const [showSaveStatesModal, setShowSaveStatesModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'display' | 'gamepad' | 'audio'>('display');
 
   // Save States List (IndexedDB)
@@ -597,6 +602,53 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ game, onClose }) => {
               {saveStatus}
             </span>
           )}
+
+          {/* Run 6-Point Live Verification (Recompa Engine Test Suite) */}
+          <button
+            onClick={async () => {
+              if (isVerifying) return;
+              setIsVerifying(true);
+              setShowVerificationModal(true);
+              setVerificationResult(null);
+
+              try {
+                if (canvasRef.current) {
+                  const result = await runLiveVerification({
+                    canvas: canvasRef.current,
+                    title: game.title,
+                    platform: game.platform,
+                    fps: stats.fps,
+                    frameTime: stats.frameTime,
+                    audioLatency: stats.audioLatency,
+                    sampleRate: stats.sampleRate,
+                    sendInput: (btn, pressed) => {
+                      if (runnerRef.current) {
+                        runnerRef.current.updateButtons({ [btn]: pressed });
+                      }
+                    },
+                    saveState: () => {
+                      return runnerRef.current ? runnerRef.current.saveState() : '';
+                    },
+                    loadState: (snap) => {
+                      if (runnerRef.current) {
+                        runnerRef.current.loadState(snap);
+                      }
+                    },
+                  });
+                  setVerificationResult(result);
+                }
+              } catch (err) {
+                console.error('Live verification error:', err);
+              } finally {
+                setIsVerifying(false);
+              }
+            }}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/40 text-xs font-mono font-bold transition-all"
+            title="Run 6-Point Live Session Automated Verification"
+          >
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span className="hidden sm:inline">Verify Session</span>
+          </button>
 
           {/* Quick Settings Button */}
           <button
@@ -1351,7 +1403,115 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ game, onClose }) => {
         </div>
       )}
 
-      {/* Keyboard Controls Reference Modal */}
+      {/* 6-Point Live Session Automated Verification Modal */}
+      {showVerificationModal && (
+        <div className="absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="max-w-xl w-full bg-[#10141e] border border-cyan-500/40 rounded-2xl p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                    <span>6-Point Live Session Verification</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 font-mono">
+                    Deterministic hardware, video, timing, audio, and state verification
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowVerificationModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {isVerifying ? (
+              <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
+                <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin"></div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-white">Running Automated Verification Suite</h4>
+                  <p className="text-xs text-slate-400 font-mono">
+                    Sampling framebuffer pixels, measuring frame deltas, testing audio synthesis...
+                  </p>
+                </div>
+              </div>
+            ) : verificationResult ? (
+              <div className="space-y-4">
+                <div className="p-3.5 rounded-xl bg-[#141a27] border border-cyan-500/30 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
+                      Session Verdict
+                    </span>
+                    <span className="text-sm font-bold text-white">
+                      {verificationResult.summary}
+                    </span>
+                  </div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-mono font-bold uppercase ${
+                      verificationResult.compatibility === 'compatible'
+                        ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                        : 'bg-amber-950 text-amber-400 border border-amber-800'
+                    }`}
+                  >
+                    {verificationResult.compatibility}
+                  </span>
+                </div>
+
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {verificationResult.checks.map((chk) => (
+                    <div
+                      key={chk.id}
+                      className="p-3 rounded-xl bg-[#0d111a] border border-slate-800 flex items-start space-x-3 text-xs font-mono"
+                    >
+                      <div className="mt-0.5">
+                        {chk.status === 'pass' ? (
+                          <Check className="w-4 h-4 text-emerald-400" />
+                        ) : chk.status === 'fail' ? (
+                          <X className="w-4 h-4 text-red-400" />
+                        ) : (
+                          <Clock className="w-4 h-4 text-slate-500" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-200">{chk.label}</span>
+                          <span
+                            className={`text-[10px] uppercase font-bold ${
+                              chk.status === 'pass'
+                                ? 'text-emerald-400'
+                                : chk.status === 'fail'
+                                ? 'text-red-400'
+                                : 'text-slate-500'
+                            }`}
+                          >
+                            {chk.status}
+                          </span>
+                        </div>
+                        <p className="text-cyan-300 mt-0.5 text-[11px]">{chk.measured}</p>
+                        {chk.detail && <p className="text-slate-400 text-[10px] mt-0.5">{chk.detail}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={() => setShowVerificationModal(false)}
+                    className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs uppercase"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
+
       {showControlsHelp && (
         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-40 flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-[#10141e] border border-[#273043] rounded-2xl p-6 shadow-2xl">

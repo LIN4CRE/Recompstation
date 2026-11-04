@@ -49,9 +49,12 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="px-1.5 py-0.5 text-[10px] font-mono font-bold tracking-wider uppercase bg-cyan-950/80 text-cyan-400 border border-cyan-800/60 rounded">
                   WASM v2.4
                 </span>
+                <span className="hidden lg:inline-block px-1.5 py-0.5 text-[9px] font-mono uppercase bg-purple-950/70 text-purple-300 border border-purple-800/60 rounded">
+                  Recompa Engine Inside
+                </span>
               </div>
               <p className="text-[11px] text-slate-400 hidden sm:block">
-                ROM Recompilation & Instant Browser Gaming Platform
+                ROM Recompilation & Instant Browser Gaming Platform • Powered by Recompa Core & No-Intro
               </p>
             </div>
           </div>

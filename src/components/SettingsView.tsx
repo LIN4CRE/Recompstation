@@ -457,6 +457,56 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
+      {/* Recompa Heritage & Unified Core Architecture Card */}
+      <div className="p-6 rounded-2xl bg-gradient-to-br from-[#121826] to-[#0e121d] border border-cyan-500/30 space-y-4">
+        <div className="flex items-center space-x-3">
+          <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
+            <Cpu className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-white flex items-center space-x-2">
+              <span>Recompa Heritage & Unified Engine Subsystems</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-950 text-purple-300 border border-purple-800">
+                LIN4CRE/Recompa Merged
+              </span>
+            </h3>
+            <p className="text-xs text-slate-400 font-mono">
+              High-precision binary analysis, No-Intro cataloguing, and deterministic execution planning
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
+          <div className="p-3 rounded-xl bg-[#0d111a] border border-slate-800 space-y-1">
+            <span className="text-cyan-400 font-bold block">No-Intro DAT Catalogue (4 MB)</span>
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              O(1) SHA-1 and CRC32 cryptographic fingerprint matching across NES, SNES, GB/GBC, GBA, Genesis, and N64 library sets.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-[#0d111a] border border-slate-800 space-y-1">
+            <span className="text-cyan-400 font-bold block">Canonical Payload Extraction</span>
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              Automated iNES trainer and copier header stripping (SMC/SWC), SMD interleaved bit unscrambling, and N64 byte-swapping (.v64/.n64 to .z64).
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-[#0d111a] border border-slate-800 space-y-1">
+            <span className="text-cyan-400 font-bold block">6-Tier Recompilation Planner</span>
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              Deterministic evaluation prioritising browser-native WebAssembly recompilation over static ports and JIT/WASM emulation.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-[#0d111a] border border-slate-800 space-y-1">
+            <span className="text-cyan-400 font-bold block">6-Point Live Session Verification</span>
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              Automated testing suite verifying video framebuffer pixels, animation deltas, 60Hz timing, audio synthesis, and save state roundtrips.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Legal & Compliance Safeguards Card */}
       <div className="p-6 rounded-2xl bg-[#0d1017] border border-[#273043] space-y-3">
         <h3 className="text-sm font-bold text-white flex items-center space-x-2">
