@@ -16,6 +16,7 @@ import {
 import { lookupGameInCatalog } from './database';
 import { detectFormat } from '../core/detect';
 import { fingerprint } from '../core/catalogue';
+import { RecompilationPlanner } from './recompilationPlanner';
 
 export interface ExtractedFile {
   name: string;
@@ -388,60 +389,61 @@ export async function analyzeRom(fileName: string, data: Uint8Array): Promise<Ro
     if (catalogMatch.region) region = catalogMatch.region;
   }
 
-  // Determine Recompilation Viability and Available Methods according to rules
-  const availableMethods: ExecutionMethod[] = [];
-  let recommendedExecution: ExecutionMethod = 'optimized_wasm_emulator';
-  let recompilationViabilityScore = 50;
-  let decompilationProject = catalogMatch?.recompilationProject || null;
+  const decompilationProject = catalogMatch?.recompilationProject || null;
 
-  if (catalogMatch?.recompilationProject?.type === 'wasm_native' || catalogMatch?.recompilationProject?.type === 'decomp_port') {
-    availableMethods.push('native_recompilation');
-    availableMethods.push('optimized_wasm_emulator');
-    recommendedExecution = 'native_recompilation';
-    recompilationViabilityScore = 98;
-  } else if (catalogMatch?.recompilationProject?.type === 'static_recomp') {
-    availableMethods.push('static_recompile_candidate');
-    availableMethods.push('optimized_wasm_emulator');
-    recommendedExecution = 'static_recompile_candidate';
-    recompilationViabilityScore = 92;
-  } else if (platform === 'doom_wad') {
-    availableMethods.push('source_port_wasm');
-    recommendedExecution = 'source_port_wasm';
-    recompilationViabilityScore = 95;
-  } else if (platform === 'chip8') {
-    availableMethods.push('jit_interpreter');
-    recommendedExecution = 'jit_interpreter';
-    recompilationViabilityScore = 90;
-  } else if (['nes', 'gb', 'gbc', 'gba'].includes(platform)) {
-    availableMethods.push('optimized_wasm_emulator');
-    availableMethods.push('jit_interpreter');
-    recommendedExecution = 'optimized_wasm_emulator';
-    recompilationViabilityScore = 80;
-  } else if (['snes', 'genesis', 'n64', 'ps1'].includes(platform)) {
-    availableMethods.push('optimized_wasm_emulator');
-    recommendedExecution = 'optimized_wasm_emulator';
-    recompilationViabilityScore = 65;
-  } else {
-    availableMethods.push('optimized_wasm_emulator');
-    recommendedExecution = 'optimized_wasm_emulator';
-    recompilationViabilityScore = 30;
+  // Initial draft report for deterministic 6-tier planning
+  const draftReport: RomAnalysisReport = {
+    fileName,
+    fileSize,
+    crc32,
+    md5,
+    sha1,
+    platform,
+    platformName,
+    gameTitle,
+    identified,
+    fileFormat: fileExt || 'bin',
+    region,
+    version,
+    headerDetails,
+    entropy,
+    entropyBuckets,
+    vectorTable,
+    strings,
+    recommendedExecution: 'optimized_wasm_emulator',
+    availableMethods: [],
+    compatibility: catalogMatch?.compatibility || 'playable',
+    missingDependencies,
+    estimatedPerformance: '',
+    technicalNotes,
+    recompilationViabilityScore: 50,
+    decompilationProject,
+  };
+
+  // Evaluate through 6-tier deterministic recompilation planner
+  let plan = null;
+  try {
+    plan = await RecompilationPlanner.plan(draftReport);
+  } catch (err) {
+    // Non-fatal fallback
   }
 
-  let compatibility: CompatibilityStatus = catalogMatch?.compatibility || 'playable';
-  if (missingDependencies.length > 0) {
-    compatibility = 'needs_bios';
-  } else if (recommendedExecution === 'native_recompilation' || recommendedExecution === 'static_recompile_candidate') {
-    compatibility = 'recomp_available';
+  const recommendedExecution: ExecutionMethod = plan?.selectedMethod || 'optimized_wasm_emulator';
+  const availableMethods: ExecutionMethod[] = plan
+    ? plan.candidates.filter((c) => c.runnable).map((c) => c.method)
+    : ['optimized_wasm_emulator'];
+
+  if (availableMethods.length === 0) {
+    availableMethods.push(recommendedExecution);
   }
 
-  const performanceEstimate =
-    recommendedExecution === 'native_recompilation'
-      ? '60 FPS Ultra-Fast (Zero CPU Emulation Overhead)'
-      : recommendedExecution === 'static_recompile_candidate'
-      ? '60 FPS High Framerate (Static Recompilation Pipeline)'
-      : recommendedExecution === 'source_port_wasm'
-      ? '60 FPS Native WebAssembly Engine'
-      : '60 FPS Fullspeed (Optimized WebAssembly Core)';
+  const recompilationViabilityScore = plan ? plan.viabilityScore : 50;
+  const compatibility: CompatibilityStatus = plan ? plan.compatibility : 'playable';
+  const performanceEstimate = plan ? plan.performanceEstimate : '60 FPS Fullspeed (Optimized WebAssembly Core)';
+
+  if (plan?.rationale) {
+    technicalNotes.push(`[PLANNER] ${plan.rationale}`);
+  }
 
   return {
     fileName,
